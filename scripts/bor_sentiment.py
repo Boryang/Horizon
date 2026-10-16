@@ -108,7 +108,7 @@ def build(rows: list[dict], fetched_at: datetime) -> str:
             f"| {r['rank']}（{rank_move(r['rank'], r.get('rank_24h_ago'))}） | {r['ticker']} | {r['name']} | "
             f"{r['mentions']} | {change(r['mentions'], r['mentions_24h_ago'])} | {r.get('upvotes', '')} |"
         )
-    lines += ["", "*熱度是落後指標，只適合當觀察名單入口，不是進場理由。*", "", "---", ""]
+    lines += ["", "*熱度是落後指標，只適合當觀察名單入口，不是進場理由。*", ""]
     return "\n".join(lines)
 
 
