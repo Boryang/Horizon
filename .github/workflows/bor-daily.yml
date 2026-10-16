@@ -91,10 +91,20 @@ jobs:
         if: ${{ always() && !(github.event_name == 'workflow_dispatch' && inputs.probe_only) }}
         run: |
           python - <<'PY'
-          import re
-          lines = open("run.log", encoding="utf-8", errors="replace").read().splitlines() if __import__("os").path.exists("run.log") else ["run.log missing"]
-          keep = [l for l in lines if re.search(r"fetch|reddit|hacker|rss|github|item|score|analy|enrich|email|sent|smtp|error|warn|fail|429|quota|exception|traceback|profile|selected|token|cost", l, re.I)]
-          text = "\n".join(l.strip()[:300] for l in keep[-200:]) or "no matching lines"
-          text = text.replace("%", "%25").replace("\r", "").replace("\n", "%0A")
-          print(f"::notice title=Horizon run diagnostics::{text[:60000]}")
+          import re, os, glob, collections
+          def note(title, text):
+              text = text.replace("%", "%25").replace("\r", "").replace("\n", "%0A")
+              print(f"::notice title={title}::{text[:3900]}")
+          log = open("run.log", encoding="utf-8", errors="replace").read() if os.path.exists("run.log") else ""
+          stats = re.findall(r"(Found \d+ items from [^\n]+|Fetched \d+ items[^\n]*|\u5f9e \d+ \u689d[^\n]*|Sending [^\n]*|Sent summary[^\n]*)", log)
+          errs = collections.Counter(re.sub(r"0x[0-9a-f]+|\d{6,}", "#", m.strip())[:200] for m in re.findall(r"(?:ERROR|WARNING|CRITICAL)\s+([^\n]+)", log))
+          note("1 stats", "\n".join(stats) or "no stats lines")
+          note("2 errors", "\n".join(f"{n}x {e}" for e, n in errs.most_common(25)) or "none")
+          files = sorted(glob.glob("data/summaries/*.md"))
+          if files:
+              body = open(files[-1], encoding="utf-8").read()
+              for k in range(0, min(len(body), 3900*5), 3900):
+                  note(f"3 summary part {k//3900+1}", body[k:k+3900])
+          else:
+              note("3 summary", "no summary file")
           PY
