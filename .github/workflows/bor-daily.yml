@@ -77,6 +77,21 @@ jobs:
               time.sleep(5)
           PY
 
+      - name: Probe ApeWisdom
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.probe_only }}
+        run: |
+          python - <<'PY'
+          import json, urllib.request
+          for f in ["wallstreetbets", "all-stocks"]:
+              try:
+                  req = urllib.request.Request(f"https://apewisdom.io/api/v1.0/filter/{f}/page/1", headers={"User-Agent": "Mozilla/5.0"})
+                  d = json.load(urllib.request.urlopen(req, timeout=30))
+                  r = d.get("results", [])[:3]
+                  print(f"::notice title=ApeWisdom {f}::keys={list(d.keys())} count={d.get('count')} sample={json.dumps(r)[:1500]}")
+              except Exception as e:
+                  print(f"::warning title=ApeWisdom {f} failed::{type(e).__name__}: {str(e)[:500]}")
+          PY
+
       - name: Run Horizon
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.probe_only) }}
         env:
