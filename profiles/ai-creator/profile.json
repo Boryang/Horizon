@@ -1,7 +1,7 @@
 {
   "id": "ai-creator",
   "name": "AI Creator Radar",
-  "display_names": {"zh": "AI创作者雷达"},
+  "display_names": {"zh": "AI創作者雷達"},
   "match": "match.md",
   "analysis": "analysis.md",
   "enrichment": {

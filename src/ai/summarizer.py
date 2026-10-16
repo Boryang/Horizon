@@ -69,23 +69,23 @@ LABELS = {
         ),
     },
     "zh": {
-        "header": "Horizon 每日速递",
-        "source": "来源",
+        "header": "Horizon 每日速遞",
+        "source": "來源",
         "background": "背景",
-        "discussion": "社区讨论",
-        "references": "参考链接",
-        "tags": "标签",
-        "selected_items": "从 {total} 条内容中筛选出 {selected} 条重要资讯。",
-        "empty_analyzed": "已分析 {total} 条内容，但没有达到重要性阈值的条目。",
+        "discussion": "社群討論",
+        "references": "參考連結",
+        "tags": "標籤",
+        "selected_items": "從 {total} 條內容中篩選出 {selected} 條重要資訊。",
+        "empty_analyzed": "已分析 {total} 條內容，但沒有達到重要性閾值的條目。",
         "empty_body": (
-            "今日暂无重要动态，可能原因：\n"
-            "- 今天关注的信息源较平静\n"
-            "- AI 评分阈值设置过高\n"
-            "- 信息源种类有待扩充\n\n"
-            "建议：\n"
-            "1. 降低当前 Profile 的过滤阈值\n"
-            "2. 添加更多多样化的信息源\n"
-            "3. 检查 AI 模型是否正常工作\n"
+            "今日暫無重要動態，可能原因：\n"
+            "- 今天關注的資訊源較平靜\n"
+            "- AI 評分閾值設定過高\n"
+            "- 資訊源種類有待擴充\n\n"
+            "建議：\n"
+            "1. 降低當前 Profile 的過濾閾值\n"
+            "2. 新增更多多樣化的資訊源\n"
+            "3. 檢查 AI 模型是否正常工作\n"
         ),
     },
 }
@@ -288,8 +288,8 @@ class DailySummarizer:
         if language == "zh":
             header = (
                 f"# {labels['header']} - {date}\n\n"
-                f"> 从 {total_fetched} 条内容中筛选出 {len(items)} 条重要资讯。\n\n"
-                "下面会按内容逐条发送详情，你可以只看感兴趣的标题。\n\n"
+                f"> 從 {total_fetched} 條內容中篩選出 {len(items)} 條重要資訊。\n\n"
+                "下面會按內容逐條傳送詳情，你可以只看感興趣的標題。\n\n"
             )
         else:
             header = (
@@ -331,7 +331,7 @@ class DailySummarizer:
     ) -> str:
         """Generate one item message for multi-message webhook delivery."""
         labels = LABELS.get(language, LABELS["en"])
-        prefix = f"第 {index}/{total} 条\n\n" if language == "zh" else f"Item {index}/{total}\n\n"
+        prefix = f"第 {index}/{total} 條\n\n" if language == "zh" else f"Item {index}/{total}\n\n"
         return normalize_language(
             prefix
             + self._format_item(

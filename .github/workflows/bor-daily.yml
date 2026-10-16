@@ -1,0 +1,38 @@
+name: Bor Daily Radar
+
+on:
+  workflow_dispatch:   # 手動觸發；每日排程待使用者同意後再加
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read   # 不寫回 repo、不發布網頁
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.26"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Prepare config and recipient (from secrets, never committed)
+        env:
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        run: |
+          cp data/config.bor.json data/config.json
+          python -c "import json,os; json.dump([os.environ['EMAIL_TO']], open('data/subscribers.json','w'))"
+
+      - name: Run Horizon
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          EMAIL_ADDRESS: ${{ secrets.EMAIL_ADDRESS }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        run: uv run horizon --hours 24 --log-level INFO

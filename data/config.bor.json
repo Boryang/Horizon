@@ -1,0 +1,70 @@
+{
+  "ai": {
+    "provider": "gemini",
+    "model": "gemini-3.8-flash",
+    "api_key_env": "GOOGLE_API_KEY",
+    "temperature": 0.3,
+    "max_tokens": 8192,
+    "throttle_sec": 2,
+    "languages": ["zh"],
+    "analysis_concurrency": 2,
+    "enrichment_concurrency": 2
+  },
+  "processing": {
+    "profiles_dir": "profiles",
+    "default_profile": "tech-news",
+    "profile_settings": {
+      "retail-sentiment": { "threshold": 7.0, "topic_dedup": true },
+      "finance-news": { "threshold": 7.0, "topic_dedup": true },
+      "tech-news": { "threshold": 7.5, "topic_dedup": true }
+    }
+  },
+  "sources": {
+    "reddit": {
+      "enabled": true,
+      "subreddits": [
+        { "subreddit": "wallstreetbets", "sort": "hot", "time_filter": "day", "fetch_limit": 25, "min_score": 500, "category": "sentiment", "profile": "retail-sentiment" },
+        { "subreddit": "stocks", "sort": "hot", "time_filter": "day", "fetch_limit": 15, "min_score": 150, "category": "sentiment", "profile": "retail-sentiment" },
+        { "subreddit": "investing", "sort": "hot", "time_filter": "day", "fetch_limit": 15, "min_score": 150, "category": "sentiment", "profile": "retail-sentiment" }
+      ],
+      "users": [],
+      "fetch_comments": 15
+    },
+    "hackernews": {
+      "enabled": true,
+      "fetch_top_stories": 30,
+      "min_score": 200,
+      "category": "tech",
+      "profile": "tech-news"
+    },
+    "rss": [
+      { "name": "GitHub Trending - Daily", "url": "https://mshibanami.github.io/GitHubTrendingRSS/daily/all.xml", "enabled": true, "category": "tech", "profile": "tech-news" },
+      { "name": "Semianalysis", "url": "https://newsletter.semianalysis.com/feed", "enabled": true, "category": "tech", "profile": "tech-news" },
+      { "name": "CNBC Finance", "url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664", "enabled": true, "category": "finance", "profile": "finance-news", "content_extractor": "trafilatura" },
+      { "name": "Federal Reserve Press Releases", "url": "https://www.federalreserve.gov/feeds/press_all.xml", "enabled": true, "category": "finance", "profile": "finance-news" }
+    ]
+  },
+  "collection": { "time_window_hours": 24 },
+  "digest": {
+    "max_items": 20,
+    "profile_order": ["retail-sentiment", "finance-news", "tech-news"],
+    "category_groups": {
+      "sentiment": { "limit": 6, "categories": ["sentiment"] },
+      "finance": { "limit": 5, "categories": ["finance"] },
+      "tech": { "limit": 9, "categories": ["tech"] }
+    },
+    "default_group": "other",
+    "default_group_limit": 3
+  },
+  "email": {
+    "enabled": true,
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 465,
+    "imap_enabled": false,
+    "imap_server": "imap.gmail.com",
+    "imap_port": 993,
+    "email_address": "${EMAIL_ADDRESS}",
+    "password_env": "EMAIL_PASSWORD",
+    "sender_name": "Horizon 每日雷達"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "id": "retail-sentiment",
+  "name": "Retail Sentiment Radar",
+  "display_names": {
+    "zh": "散戶熱度雷達"
+  },
+  "match": "match.md",
+  "analysis": "analysis.md",
+  "content": {
+    "analysis_max_chars": 4000,
+    "enrichment_max_chars": 8000,
+    "sampling": "prefix"
+  },
+  "enrichment": {
+    "prompt": "enrichment.md",
+    "blocks": [
+      {
+        "id": "summary",
+        "type": "section",
+        "tools": [],
+        "primary": true
+      },
+      {
+        "id": "discussion",
+        "type": "section",
+        "tools": []
+      },
+      {
+        "id": "background",
+        "type": "section",
+        "tools": ["web_search"],
+        "optional": true
+      }
+    ]
+  }
+}

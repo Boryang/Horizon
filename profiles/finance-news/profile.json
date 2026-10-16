@@ -2,7 +2,7 @@
   "id": "finance-news",
   "name": "Financial News",
   "display_names": {
-    "zh": "财经新闻"
+    "zh": "財經新聞"
   },
   "match": "match.md",
   "analysis": "analysis.md",
