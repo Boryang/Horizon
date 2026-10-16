@@ -2,6 +2,11 @@ name: Bor Daily Radar
 
 on:
   workflow_dispatch:   # 手動觸發；每日排程待使用者同意後再加
+    inputs:
+      send_email:
+        description: "寄出 Email（關閉 = 只跑診斷，不寄信）"
+        type: boolean
+        default: true
 
 jobs:
   radar:
@@ -26,13 +31,34 @@ jobs:
       - name: Prepare config and recipient (from secrets, never committed)
         env:
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          SEND_EMAIL: ${{ github.event_name != 'workflow_dispatch' || inputs.send_email }}
         run: |
-          cp data/config.bor.json data/config.json
-          python -c "import json,os; json.dump([os.environ['EMAIL_TO']], open('data/subscribers.json','w'))"
+          python - <<'PY'
+          import json, os
+          cfg = json.load(open("data/config.bor.json"))
+          cfg["email"]["enabled"] = os.environ["SEND_EMAIL"] == "true"
+          json.dump(cfg, open("data/config.json", "w"), ensure_ascii=False, indent=2)
+          json.dump([os.environ["EMAIL_TO"]], open("data/subscribers.json", "w"))
+          print("email enabled:", cfg["email"]["enabled"])
+          PY
 
       - name: Run Horizon
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           EMAIL_ADDRESS: ${{ secrets.EMAIL_ADDRESS }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-        run: uv run horizon --hours 24 --log-level INFO
+        run: |
+          set -o pipefail
+          uv run horizon --hours 24 --log-level INFO 2>&1 | tee run.log
+
+      - name: Diagnostics as annotation
+        if: always()
+        run: |
+          python - <<'PY'
+          import re
+          lines = open("run.log", encoding="utf-8", errors="replace").read().splitlines() if __import__("os").path.exists("run.log") else ["run.log missing"]
+          keep = [l for l in lines if re.search(r"fetch|reddit|hacker|rss|github|item|score|analy|enrich|email|sent|smtp|error|warn|fail|429|quota|exception|traceback|profile|selected|token|cost", l, re.I)]
+          text = "\n".join(l.strip()[:300] for l in keep[-200:]) or "no matching lines"
+          text = text.replace("%", "%25").replace("\r", "").replace("\n", "%0A")
+          print(f"::notice title=Horizon run diagnostics::{text[:60000]}")
+          PY
