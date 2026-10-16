@@ -7,6 +7,10 @@ on:
         description: "寄出 Email（關閉 = 只跑診斷，不寄信）"
         type: boolean
         default: true
+      probe_only:
+        description: "只測 Gemini 連線，不跑完整流程"
+        type: boolean
+        default: false
 
 jobs:
   radar:
@@ -42,7 +46,34 @@ jobs:
           print("email enabled:", cfg["email"]["enabled"])
           PY
 
+      - name: Probe Gemini API
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.probe_only }}
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        run: |
+          uv run python - <<'PY'
+          import json
+          from google import genai
+          from google.genai import types
+          c = genai.Client()
+          model = json.load(open("data/config.json"))["ai"]["model"]
+          try:
+              names = [m.name for m in c.models.list() if "flash" in m.name]
+              print(f"::notice title=Gemini flash models::{', '.join(names)[:3000]}")
+          except Exception as e:
+              print(f"::warning title=Gemini list models failed::{type(e).__name__}: {str(e)[:1500]}")
+          for m in [model]:
+              try:
+                  r = c.models.generate_content(model=m, contents='Reply with {"ok": true}',
+                      config=types.GenerateContentConfig(max_output_tokens=8192, response_mime_type="application/json"))
+                  u = r.usage_metadata
+                  print(f"::notice title=Gemini probe {m}::text={r.text!r} usage={u}")
+              except Exception as e:
+                  print(f"::warning title=Gemini probe {m} failed::{type(e).__name__}: {str(e)[:1500]}")
+          PY
+
       - name: Run Horizon
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.probe_only) }}
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           EMAIL_ADDRESS: ${{ secrets.EMAIL_ADDRESS }}
@@ -52,7 +83,7 @@ jobs:
           uv run horizon --hours 24 --log-level INFO 2>&1 | tee run.log
 
       - name: Diagnostics as annotation
-        if: always()
+        if: ${{ always() && !(github.event_name == 'workflow_dispatch' && inputs.probe_only) }}
         run: |
           python - <<'PY'
           import re
