@@ -224,6 +224,22 @@ class HorizonOrchestrator:
         )
         self.last_fetch_report: Optional[FetchReport] = None
 
+    def _insert_extra_sections(self, summary: str, lang: str) -> str:
+        """Insert data/extra_sections.md (pre-built, non-AI section) after the summary header."""
+        from pathlib import Path
+
+        extra_path = Path(self.storage.data_dir) / "extra_sections.md"
+        if lang != "zh" or not extra_path.exists():
+            return summary
+        extra = extra_path.read_text(encoding="utf-8").strip()
+        if not extra:
+            return summary
+        marker = "\n---\n"
+        idx = summary.find(marker)
+        if idx == -1:
+            return summary.rstrip() + "\n\n---\n\n" + extra + "\n"
+        return summary[: idx] + "\n---\n\n" + extra + "\n" + summary[idx:]
+
     async def run(self, force_hours: int = None) -> None:
         """Execute the complete workflow.
 
@@ -306,6 +322,7 @@ class HorizonOrchestrator:
                     profile_order=self.config.digest.profile_order,
                 )
                 summary = await summarizer.generate_summary(important_items, today, len(all_items), language=lang)
+                summary = self._insert_extra_sections(summary, lang)
 
                 # Save to data/summaries/
                 summary_path = self.storage.save_daily_summary(today, summary, language=lang)

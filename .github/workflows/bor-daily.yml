@@ -92,6 +92,10 @@ jobs:
                   print(f"::warning title=ApeWisdom {f} failed::{type(e).__name__}: {str(e)[:500]}")
           PY
 
+      - name: Build retail-sentiment section (ApeWisdom)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.probe_only) }}
+        run: python scripts/bor_sentiment.py
+
       - name: Run Horizon
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.probe_only) }}
         env:

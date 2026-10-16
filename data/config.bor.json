@@ -32,7 +32,7 @@
   },
   "sources": {
     "reddit": {
-      "enabled": true,
+      "enabled": false,
       "subreddits": [
         {
           "subreddit": "wallstreetbets",

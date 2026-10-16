@@ -167,7 +167,7 @@ class EmailManager:
         cleaned_summary = clean_app_summary_markdown(summary_md)
         safe_summary = html.escape(cleaned_summary)
         html_content = (
-            markdown.markdown(safe_summary)
+            markdown.markdown(safe_summary, extensions=["tables"])
             if markdown
             else f"<pre>{safe_summary}</pre>"
         )
@@ -183,6 +183,9 @@ class EmailManager:
                 code {{ background-color: #f4f4f4; padding: 2px 5px; border-radius: 3px; font-family: monospace; }}
                 pre {{ background-color: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }}
                 blockquote {{ border-left: 4px solid #ddd; padding-left: 15px; color: #777; }}
+                table {{ border-collapse: collapse; margin: 8px 0; font-size: 14px; }}
+                th, td {{ border: 1px solid #ddd; padding: 4px 8px; text-align: left; }}
+                th {{ background-color: #f4f4f4; }}
                 .footer {{ margin-top: 40px; font-size: 12px; color: #888; text-align: center; border-top: 1px solid #eee; padding-top: 20px; }}
             </style>
         </head>
